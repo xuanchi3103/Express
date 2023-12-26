@@ -4,18 +4,18 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
-// const userdb = require("../myExpressApp/schema/Model/users")
+
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-var studentsRouter = require("./routes/students");
+var itemsRouter = require("./routes/items");
 var productsRouter = require("./routes/products");
-const { error } = require("console");
+var authRouter = require("./routes/authen");
 
 var app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "pug");
+app.set("view engine", "ejs");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -25,15 +25,16 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/students", studentsRouter);
+app.use("/items", itemsRouter);
 app.use("/products", productsRouter);
+app.use("/auth", authRouter);
 
-mongoose.connect("mongodb://127.0.0.1:27017/TestDB")
-mongoose.connection.on('error', err => {
-  logError(err);
+mongoose.connect("mongodb://127.0.0.1:27017/TestDB");
+mongoose.connection.once("open", function () {
+  console.log("thanh cong");
 });
-mongoose.connection.once('open', function(){
-console.log("thanh cong");
+mongoose.connection.on("error", function () {
+  console.log(" k thanh cong");
 });
 
 // catch 404 and forward to error handler
