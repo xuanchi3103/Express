@@ -10,6 +10,7 @@ var usersRouter = require("./routes/users");
 var itemsRouter = require("./routes/items");
 var productsRouter = require("./routes/products");
 var authRouter = require("./routes/authen");
+var departmentsRouter = require('./routes/departments');
 
 var app = express();
 
@@ -27,7 +28,8 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/items", itemsRouter);
 app.use("/products", productsRouter);
-app.use("/auth", authRouter);
+app.use("/authen", authRouter);
+app.use('/departments',departmentsRouter);
 
 mongoose.connect("mongodb://127.0.0.1:27017/TestDB");
 mongoose.connection.once("open", function () {

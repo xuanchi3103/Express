@@ -1,6 +1,7 @@
 var mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const configs = require("../helper/configs");
 
 const UserSchema = new mongoose.Schema({
@@ -8,12 +9,21 @@ const UserSchema = new mongoose.Schema({
   userName: String,
   password: String,
   role: String,
+    tokenForgot:String,
+    tokenForgotExp:String,
+    department_k:{
+        type:mongoose.Schema.ObjectId,
+        ref:'department'
+    }
 });
 
-UserSchema.pre("save", function () {
+UserSchema.pre('save', function (next) {
+  if(!this.isModified("password")){
+      return next();
+  }
   const salt = bcrypt.genSaltSync(10);
   this.password = bcrypt.hashSync(this.password, salt);
-  //bug sinh ra khi change password
+  next();
 });
 
 UserSchema.methods.getJWT = function () {
@@ -22,6 +32,12 @@ UserSchema.methods.getJWT = function () {
   });
   return token;
 };
+UserSchema.methods.addTokenForgotPassword= function(){
+  var tokenForgot = crypto.randomBytes(31).toString('hex');
+  this.tokenForgot = tokenForgot;
+  this.tokenForgotExp = Date.now()+15*60*1000;
+  return tokenForgot;
+}
 UserSchema.statics.checkLogin = async function (userName, password) {
   if (!userName || !password) {
     return { err: "Hay nhap day du username va password" };

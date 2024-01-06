@@ -5,31 +5,20 @@ module.exports = {
   checkLogin: async function (req) {
     var result = {};
     var token = req.headers.authorization;
-    if (!token) {
-      return (result = { message: "Vui long dang nhap" });
-    }
-    if (token.startsWith("Bearer")) {
-      token = token.split(" ")[1];
-      try {
-        var userDecrypt = await jwt.verify(token, configs.SECRET_KEY);
-        return (result = {
-          id: userDecrypt.id,
-          role: userDecrypt.role,
-        });
-      } catch (error) {
-        return (result = { message: "Vui long dang nhap" });
-      }
-    } else {
-      return (result = { message: "Vui long dang nhap" });
-    }
-  },
-  checkRole: async function (role) {
-    const DSRole = ["admin", "publisher"];
-    var result = {};
-    if (DSRole.includes(role)) {
-      return (result = true);
-    } else {
-      return (result = { message: "ban khong du quyen truy cap" });
-    }
-  },
+    if (token&&token.startsWith("Bearer")) {
+      token = token.split(" ")[1];             
+  } else {
+      if(req.cookies.tokenJWT){
+          token = req.cookies.tokenJWT;
+      }else{
+          return result.err = "Vui long dang nhap";
+      }             
+  }
+  try {
+      var userID = await jwt.verify(token, configs.SECRET_KEY);
+      return userID.id;
+  } catch (error) {
+      return result.err = "Vui long dang nhap";
+  }
+},
 };

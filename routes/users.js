@@ -40,6 +40,7 @@ router.post("/add", validate.validator(), async function (req, res, next) {
       userName: req.body.userName,
       email: req.body.email,
       password: req.body.password,
+      department_k:req.body.department_k
     });
     responseData.responseReturn(res, 200, true, newUser);
   }
