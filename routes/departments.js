@@ -5,10 +5,9 @@ var responseData = require('../helper/responseData');
 var modelDepartment = require('../models/department');
 var validates = require('../validates/product');
 
-router.get('/', async function (req, res, next) {
-  var allDepartment = await SchemaDepartment.find({})
-  .populate({path:'employees',select:'_id userName'});
-  responseData.responseReturn(res, 200, true, allDepartment);
+router.get("/", async function (req, res, next) {
+  var departmentAll = await modelDepartment.getAll();
+  responseData.responseReturn(res, 200, true, departmentAll);
 });
 
 router.get('/:id', async function (req, res, next) {
@@ -34,7 +33,7 @@ router.post("/add", async function(req, res, next){
 
 router.put("/edit/:id", async function(req,res,next){
   try{
-    var updatedDepartment = await departmentschema.findByIdAndUpdate(
+    var updatedDepartment = await SchemaDepartment.findByIdAndUpdate(
       req.params.id,
       req.body,
       { returnDocument: "after" }
@@ -48,7 +47,7 @@ router.put("/edit/:id", async function(req,res,next){
 
 router.delete("/delete/:id", async function(req,res,next){
   try {
-    var department = await departmentschema.findByIdAndDelete(req.params.id);
+    var department = await SchemaDepartment.findByIdAndDelete(req.params.id);
     responseData.responseReturn(res, 200, true, "xoa thanh cong");
   } catch (error) {
     responseData.responseReturn(res, 404, false, "khong tim thay department can xoa");
