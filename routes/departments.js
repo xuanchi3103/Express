@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var SchemaDepartment = require('../schema/department');
 var responseData = require('../helper/responseData');
+var modelDepartment = require('../models/department');
+var validates = require('../validates/product');
 
 router.get('/', async function (req, res, next) {
   var allDepartment = await SchemaDepartment.find({})
@@ -9,49 +11,47 @@ router.get('/', async function (req, res, next) {
   responseData.responseReturn(res, 200, true, allDepartment);
 });
 
-router.get('/id', async function (req, res, next) {
-  var allDepartment = await SchemaDepartment.find({})
-  .populate({path:'employees',select:'_id userName'});
-  responseData.responseReturn(res, 200, true, allDepartment);
-});
-const getOneDepartment = async function (req, res, next) {
-  try {
-    const department = await departmentModel.getOne(req.params.id);
+router.get('/:id', async function (req, res, next) {
+  try{
+    var department = await modelDepartment.getById(req.params.id);
     responseData.responseReturn(res, 200, true, department);
-  } catch (err) {
-    responseData.responseReturn(res, 404, false, err);
+  }catch(err){
+    responseData.responseReturn(res, 404, false, "khong tim thay department can tim");
   }
-};
+});
 
-const deleteDepartment = async function (req, res, next) {
-  try {
-    console.log(req.params.id);
-    await departmentModel.deleteOne(req.params.id);
-    responseData.responseReturn(res, 200, true, "xoa thanh cong");	
-  } catch (err) {
-    responseData.responseReturn(res, 404, false, err);
-  }
-};
-const createDepartment = async function (req, res, next) {
-  try {
-    const department = await new departmentModel.createOne({
-      name: req.body.name,
-    }).save();
-
-    responseData.responseReturn(res, 201, true, department);
-  } catch (err) {
-    responseData.responseReturn(res, 404, false, err);
-  }
-};
-
-const updateDepartment = async function (req, res, next) {
-  try {
-    const department = await departmentModel.updateOne(req.params.id, {
+router.post("/add", async function(req, res, next){
+  var department = await modelDepartment.getByName(req.body.name);
+  if (department) {
+    responseData.responseReturn(res, 404, false, "department da ton tai");
+  } else {
+    const newdepartment = await modelDepartment.createDepartment({
       name: req.body.name,
     });
-    responseData.responseReturn(res, 200, true, department);
-  } catch (err) {
-    responseData.responseReturn(res, 404, false, err);
+    responseData.responseReturn(res, 200, true, newdepartment);
   }
-};
+});
+
+router.put("/edit/:id", async function(req,res,next){
+  try{
+    var updatedDepartment = await departmentschema.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { returnDocument: "after" }
+    );
+    console.log(updatedDepartment);
+    responseData.responseReturn(res, 200, true, updatedDepartment);
+  } catch (error) {
+    responseData.responseReturn(res, 404, false, "khong tim thay department");
+  }
+});
+
+router.delete("/delete/:id", async function(req,res,next){
+  try {
+    var department = await departmentschema.findByIdAndDelete(req.params.id);
+    responseData.responseReturn(res, 200, true, "xoa thanh cong");
+  } catch (error) {
+    responseData.responseReturn(res, 404, false, "khong tim thay department can xoa");
+  }
+});
 module.exports = router;

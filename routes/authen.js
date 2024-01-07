@@ -12,7 +12,7 @@ const configs = require('../helper/configs');
 const sendmail = require('../helper/sendmail');
 const { checkLogin, checkRole } = require("../middlewares/protect");
 
-router.post("/register", async function (req, res, next) {
+router.post("/register" , validate.validator(), async function (req, res, next) {
   // , validate.validator()
   var errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -29,16 +29,22 @@ router.post("/register", async function (req, res, next) {
     responseData.responseReturn(res, 404, false, "user da ton tai");
   } else {
     const newUser = await modelUser.createUser({
-      userName: req.body.userName,
-      // email: req.body.email,
+      username: req.body.username,
+      email: req.body.email,
       password: req.body.password,
-    })
+      role: req.body.role,
+    });
     responseData.responseReturn(res, 200, true, newUser);
   }
 });
 
-router.post("/login", async (req, res, next) => {
-  var result = await modelUser.login(req.body.userName, req.body.password);
+router.post("/login", async function (req, res, next) {
+  var result = await modelUser.login(req.body.username, req.body.password);
+  if (result.err) {
+    responseData.responseReturn(res, 400, true, result.err);
+    return;
+  }
+  var result = await modelUser.login(req.body.username, req.body.password);
   if (result.err) {
     responseData.responseReturn(res, 400, true, result.err);
     return;
@@ -51,6 +57,28 @@ router.post("/login", async (req, res, next) => {
   });
   responseData.responseReturn(res, 200, true, token);
 });
+router.get(
+  "/me",
+  async function (req, res, next) {
+    var result = await checkLogin(req);
+    if (result.err) {
+      responseData.responseReturn(res, 400, true, result.err);
+      return;
+    }
+    req.userID = result;
+    console.log(result);
+    next();
+  },
+  // checkRole("admin"),
+  async function (req, res, next) {
+    try {
+      var user = await modelUser.getById(req.userID);
+      res.send({ done: user });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 router.get('/logout', async function(req, res, next){
   res.cookie('tokenJWT','none',{
     expires:new Date(Date.now()+1000),
@@ -58,34 +86,6 @@ router.get('/logout', async function(req, res, next){
   });
   responseData.responseReturn(res, 200, true, 'logout thanh cong');
 })
-router.get(
-  "/me",
-  async function (req, res, next) {
-    var result = await checkLogin(req);
-    if (result.message) {
-      responseData.responseReturn(res, 400, false, result.message);
-      return;
-    }
-    req.userID = result.id;
-    req.role = result.role;
-    next();
-  },
-  // async function(req, res, next){
-  //   var user = await modelUser.getOne(req.userID);
-  //   var role = user.role;
-  //   console.log(role);
-  //   var DSRole = ['admin','publisher'];
-  //   if(DSRole.includes(role)){
-  //     next();
-  //   }
-  //   else{
-  //     responseData.responseReturn(res, 403, true,"ban khong du quyen");
-  //   }
-  // },
-   async function (req, res, next) {//get all
-    var user = await modelUser.getOne(req.userID);
-    res.send({ "done": user});
-  });
 router.post('/forgetPassword', async function(req, res, next){
   var email = req.body.email;
   var user = await modelUser.getByEmail(email);
@@ -96,19 +96,23 @@ router.post('/forgetPassword', async function(req, res, next){
   user.addTokenForgotPassword();
   await user.save();
   try {
-    await sendmail.send(user.email,user.tokenForgot);
+   await sendmail.send(user.email,user.tokenForgot);
+
     return responseData.responseReturn(res, 200, true,'gui mail thanh cong');
   } catch (error) {
     user.tokenForgot = undefined;
     user.tokenForgotExp = undefined;
     responseData.responseReturn(res, 400, true,'gui mail loi vui long thu lai'+error);
   }  
-  return;
+  next();
 })
 router.post('/resetPassword/:token', async function(req, res, next){
   var token = req.params.token;
   var password = req.body.password;
+  console.log(password);
   var user = await modelUser.getByTokenForgot(token);
+  console.log(token);
+  console.log(user);
   user.password = password;
   user.tokenForgot = undefined;
   user.tokenForgotExp = undefined;

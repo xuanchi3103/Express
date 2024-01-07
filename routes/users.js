@@ -6,6 +6,7 @@ var responseData = require("../helper/responseData");
 var modelUser = require("../models/user");
 var validate = require("../validates/user");
 const { validationResult } = require("express-validator");
+var department = require('../models/department');
 
 router.get("/", async function (req, res, next) {
   console.log(req.query);
@@ -15,8 +16,14 @@ router.get("/", async function (req, res, next) {
 router.get("/:id", async function (req, res, next) {
   // get by ID
   try {
-    var user = await modelUser.getOne(req.params.id);
-    responseData.responseReturn(res, 200, true, user);
+    var user = await modelUser.getById(req.params.id).populate('departmentId');
+    const userData = {
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      department: user.departmentId.name 
+    };
+    responseData.responseReturn(res, 200, true, userData);
   } catch (error) {
     responseData.responseReturn(res, 404, false, "khong tim thay user");
   }
@@ -40,6 +47,7 @@ router.post("/add", validate.validator(), async function (req, res, next) {
       userName: req.body.userName,
       email: req.body.email,
       password: req.body.password,
+      role: req.body.role,
       department_k:req.body.department_k
     });
     responseData.responseReturn(res, 200, true, newUser);
