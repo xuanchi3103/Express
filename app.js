@@ -11,6 +11,7 @@ var itemsRouter = require("./routes/items");
 var productsRouter = require("./routes/products");
 var authRouter = require("./routes/authen");
 var departmentsRouter = require('./routes/departments');
+var categoriesRouter = require("./routes/categories");
 
 var app = express();
 
@@ -30,6 +31,7 @@ app.use("/items", itemsRouter);
 app.use("/products", productsRouter);
 app.use("/authen", authRouter);
 app.use('/departments',departmentsRouter);
+app.use("/categories", categoriesRouter);
 
 mongoose.connect("mongodb://127.0.0.1:27017/TestDB");
 mongoose.connection.once("open", function () {

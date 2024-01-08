@@ -8,7 +8,7 @@ var validate = require("../validates/user");
 const { validationResult } = require("express-validator");
 var department = require('../models/department');
 
-router.get("/", async function (req, res, next) {
+router.get('/', async function (req, res, next) {
   console.log(req.query);
   var usersAll = await modelUser.getall(req.query);
   responseData.responseReturn(res, 200, true, usersAll);
@@ -48,7 +48,7 @@ router.post("/add", validate.validator(), async function (req, res, next) {
       email: req.body.email,
       password: req.body.password,
       role: req.body.role,
-      department_k:req.body.department_k
+      department_k:req.body.department_k,
     });
     responseData.responseReturn(res, 200, true, newUser);
   }

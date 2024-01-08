@@ -3,15 +3,17 @@ const responseData = require("../helper/responseData");
 var router = express.Router();
 
 var modelProduct = require("../models/product");
+
 var productschema = require("../schema/product");
 const { body, validationResult } = require("express-validator");
 var validate = require("../validates/product");
 
 /* GET users listing. */
 router.get("/", async function (req, res, next) {
-  var productAll = await modelProduct.getAll();
+  var productAll = await modelProduct.getallSort();
   responseData.responseReturn(res, 200, true, productAll);
 });
+
 router.get("/:id", async function (req, res, next) {
   try {
     var product = await modelProduct.getById(req.params.id);
@@ -21,7 +23,8 @@ router.get("/:id", async function (req, res, next) {
   }
 });
 
-router.post("/add", validate.validator(), async function (req, res, next) {
+router.post("/add", async function (req, res, next) {
+  // , validate.validator()
   var errors = validationResult(req);
   if (!errors.isEmpty()) {
     responseData.responseReturn(
@@ -37,10 +40,12 @@ router.post("/add", validate.validator(), async function (req, res, next) {
     responseData.responseReturn(res, 404, false, "product da ton tai");
   } else {
     const newProduct = await modelProduct.createProduct({
-      description: req.body.description,
+      // description: req.body.description,
       name: req.body.name,
-      image: req.body.image,
       price: req.body.price,
+      isDelete: req.body.isDelete,
+      order: req.body.order,
+      category_k: req.body.category_k
     });
     responseData.responseReturn(res, 200, true, newProduct);
   }
@@ -61,8 +66,15 @@ router.put("/edit/:id", async function (req, res, next) {
 router.delete("/delete/:id", async function (req, res, next) {
   //delete by Id
   try {
-    var product = await productschema.findByIdAndDelete(req.params.id);
-    responseData.responseReturn(res, 200, true, "xoa thanh cong");
+    var deletedProduct = await productschema.findByIdAndUpdate(
+      req.params.id,
+      {
+        isDelete:true
+      },
+      { returnDocument: "after" }
+    );
+    console.log(deletedProduct);
+    responseData.responseReturn(res, 200, true, deletedProduct);
   } catch (error) {
     responseData.responseReturn(res, 404, false, "khong tim thay product");
   }
